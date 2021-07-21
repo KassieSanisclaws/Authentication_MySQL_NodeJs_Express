@@ -31,9 +31,10 @@ exports.getUserByID = (req, res)=>{
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // 
-/*exports.createNewUser = async(req, res) => {
+exports.createNewUser = async(req, res) => {
     const {user, email, password} = new User(req.body);
     console.log('user', user);
+    /*
  // check if the user has both email and passwords fields filled. (if-statement)//
      if(req.body.constructor === Object && Object.keys(req.body).length === 0){
          res.send(400).json({ success: false, message: "Please Fill All Fields"});
@@ -54,36 +55,35 @@ exports.getUserByID = (req, res)=>{
             }
          )}}  
                    
-         )}
-    }*/
+         )}*/
+    }
 ///////////////////////////////////////////////////////////////////////////////////////
 //
-exports.loginUser = async(req, res) => {
+exports.loginUser = async(req, res, next) => {
     const { email, password } = req.body;
-  
     // Checks the email and password fields for null. //
        if(req.body.email && req.body.password === 0){
            res.send(400).json({ success: false, message: "Please Complete All Fields!"});
         } else{
-          const user = await dbconnect.promise().query('SELECT * FROM users WHERE user_email = ', req.body.email, (err, reqData) => {
+        const user = await dbconnect.promise().query('SELECT * FROM `users` WHERE `user_email`=  ', [req.body], (err, result) => {
             if(err){
               res.status(500).send("An Error Occurred While Verifying The user");
           }else{
             // if user does not exit in the database. //
-            if(reqData.length === 0){
+            if(result.length === 0){
               res.status(401).json({ success: false, message: "The User Does Not Exist! " });
             }else{
-                     (req.body.password, data[0].user_password, (e,match) => {
+                     bcrypt.compare(req.body.password, data[0].user_password, (e,match) => {
                 if(e){
                   res.status(500).send("An Error Occured While Verifying The User");
                 }
                 if(match){
                   // return the user token. //
-                  res.send({ 
+                   res.send({ 
                            _id: user._id,
                            email: user.email,
                            token: generateToken(user)
-                  });
+                  })
                 }else{
                   // incorrect password. //
                   return res.status(401).send("The Password Is Incorrect");
