@@ -65,7 +65,7 @@ exports.loginUser = async(req, res, next) => {
        if(req.body.email && req.body.password === 0){
            res.send(400).json({ success: false, message: "Please Complete All Fields!"});
         } else{
-        const user = await dbconnect.promise().query('SELECT * FROM `users` WHERE `user_email`=  ', [req.body], (err, result) => {
+        const user = await dbconnect.promise().query('SELECT * FROM users WHERE user_email = ? ', [req.body.email], (err, result) => {
             if(err){
               res.status(500).send("An Error Occurred While Verifying The user");
           }else{
