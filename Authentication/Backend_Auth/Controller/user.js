@@ -73,14 +73,14 @@ exports.loginUser = async(req, res, next) => {
             if(result.length === 0){
               res.status(401).json({ success: false, message: "The User Does Not Exist! " });
             }else{
-                     bcrypt.compare(req.body.password, data[0].user_password, (e,match) => {
+                     bcrypt.compare(req.body.password, data[0].user_password, (e,user) => {
                 if(e){
                   res.status(500).send("An Error Occured While Verifying The User");
                 }
-                if(match){
+                if(user){
                   // return the user token. //
                    res.send({ 
-                           _id: user._id,
+                           _id: user.id,
                            email: user.email,
                            token: generateToken(user)
                   })
