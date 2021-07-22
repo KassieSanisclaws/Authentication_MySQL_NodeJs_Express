@@ -48,13 +48,15 @@ exports.createNewUser = (req, res) => {
                    res.status(401).json({ success: false, message: "User Already In Use!" });
                 }else{
                   if(result.length === 0){
-              const user = dbconnect.query('INSET INTO users VALUES user_email And user_password = ? ', [req.body.email, req.body.hash],  (result) => { 
-               res.send({
-                                _id: result[0].user_id,
-                                email: result[0].user_email,
-                                token: utils.generateToken(user)
-
-              })
+            dbconnect.query('INSERT INTO users VALUES "user_email" AND "user_password"  = ? ', [req.body.email, req.body.password],  (e,result) => { 
+            if(e){
+              res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
+            }else{
+              if(result){
+                 return res.status(201).json({ success: true, message: "User created Successfully!"});
+              }
+             
+            }
               } 
    
        )}}}})}
