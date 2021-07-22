@@ -1,6 +1,6 @@
 const User = require("../Models/userModel");
 const bcrypt = require("bcryptjs");
-const generateToken = require("../utils");
+const util = require("../utils");
 const jwt = require("jsonwebtoken");
 const dbconnect = require('../Config/config.db');
 
@@ -31,41 +31,53 @@ exports.getUserByID = (req, res)=>{
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // 
-exports.createNewUser = async(req, res) => {
-    const {user, email, password} = new User(req.body);
-    console.log('user', user);
-    /*
- // check if the user has both email and passwords fields filled. (if-statement)//
-     if(req.body.constructor === Object && Object.keys(req.body).length === 0){
-         res.send(400).json({ success: false, message: "Please Fill All Fields"});
- //  second test case for createNewUser goes below here. //
-     }else{
-         const hash = await bcrypt.hash(password, 10, (e,token) => {
-          if(e){
-         res.status(500).send("An Error Occurred Creating User");   
-         }if(token){
-       res.status(200).send({ success: true, generateToken: generateToken()});
-        }else {   
-            dbconnect.query('INSERT INTO authentication.users SET = ? ', req.body.email, (err)=>{
-                if(err){
-                    console.log("Error inserting data");
+exports.createNewUser = (req, res) => {
+         const email = req.body.email;
+         const password = req.body.password;   
+// check if the input fields all have been filled by user. //        
+            if(email && password === 0){
+                 res.status(400).json({ success: false, message: "Please Have All Fields Completed Before Submission!"});
+          } else{
+// check for user in database. performming a query. // 
+       dbconnect.query('SELECT * FROM users WHERE user_email = ?', [req.body.email], (e, result) => { 
+            if(e){
+                res.status(500).json({ success: false, message: "An Error Occurred While Creating User!"});
+              }else{
+// check to see if there is a user already with the email in database, if there is an error response is sent back. //                
+                if(result.length === 1){
+                   res.status(401).json({ success: false, message: "User Already In Use!" });
                 }else{
-                    console.log("User profile created successfully");
-                }
-            }
-         )}}  
-                   
-         )}*/
-    }
+                  if(result.length === 0){
+              const user = dbconnect.query('INSET INTO users VALUES user_email And user_password = ? ', [req.body.email, req.body.hash],  (result) => { 
+               res.send({
+                                _id: result[0].user_id,
+                                email: result[0].user_email,
+                                token: utils.generateToken(user)
+
+              })
+              } 
+   
+       )}}}})}
+          }
+               
+              
+///////////////////////////////////////////////////////////////////////////////////////
+// loginUser bcrypt.//
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //
-exports.loginUser = async(req, res, next) => {
+exports.loginUser = (req, res) => {
     const { email, password } = req.body;
     // Checks the email and password fields for null. //
-       if(req.body.email && req.body.password === 0){
+       if(email && password === 0){
            res.send(400).json({ success: false, message: "Please Complete All Fields!"});
         } else{
-        const user = await dbconnect.promise().query('SELECT * FROM users WHERE user_email = ? ', [req.body.email], (err, result) => {
+          dbconnect.query('SELECT * FROM users WHERE user_email = ? ', [req.body.email], (err,result) => {
             if(err){
               res.status(500).send("An Error Occurred While Verifying The user");
           }else{
@@ -73,22 +85,19 @@ exports.loginUser = async(req, res, next) => {
             if(result.length === 0){
               res.status(401).json({ success: false, message: "The User Does Not Exist! " });
             }else{
-                     bcrypt.compare(req.body.password, data[0].user_password, (e,user) => {
-                if(e){
-                  res.status(500).send("An Error Occured While Verifying The User");
-                }
-                if(user){
-                  // return the user token. //
-                   res.send({ 
-                           _id: user.id,
-                           email: user.email,
-                           token: generateToken(user)
-                  })
-                }else{
+              if(password === result[0].user_password){
+                const user = {id: result[0].user_id, email: result[0].user_email}
+                res.send({ 
+                  _id: result[0].user_id,
+                  email: result[0].user_email,
+                  token: util.generateToken(user)
+                })
+              }
+              else{
                   // incorrect password. //
                   return res.status(401).send("The Password Is Incorrect");
-                }}
-              )}
+                }
+              }
            }
        })
      }
@@ -97,5 +106,5 @@ exports.loginUser = async(req, res, next) => {
     
   }
   
-
+                
 
