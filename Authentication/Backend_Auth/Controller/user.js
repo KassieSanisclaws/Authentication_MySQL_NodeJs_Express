@@ -37,7 +37,7 @@ exports.createNewUser = (req, res) => {
 // check if the input fields all have been filled by user. //        
             if(email && password === 0){
                  res.status(400).json({ success: false, message: "Please Have All Fields Completed Before Submission!"});
-          } else{
+          }else{
 // check for user in database. performming a query. // 
        dbconnect.query('SELECT * FROM users WHERE user_email = ?', [req.body.email], (e, result) => { 
             if(e){
@@ -48,17 +48,16 @@ exports.createNewUser = (req, res) => {
                    res.status(401).json({ success: false, message: "User Already In Use!" });
                 }else{
                   if(result.length === 0){
-            dbconnect.query('INSERT INTO users VALUES "user_email" AND "user_password"  = ? ', [req.body.email, req.body.password],  (e,result) => { 
+// insert new user into database. //
+       dbconnect.query('INSERT INTO users (user_email, user_password) VALUES (?,?)', [req.body.email, req.body.password],  (e,result) => { 
             if(e){
               res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
-            }else{
+            } else{
               if(result){
-                 return res.status(201).json({ success: true, message: "User created Successfully!"});
+            return res.status(201).json({ success: true, message: "User created Successfully!"});
               }
-             
             }
-              } 
-   
+          } 
        )}}}})}
           }
                
