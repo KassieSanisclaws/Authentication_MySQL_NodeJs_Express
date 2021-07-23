@@ -30,7 +30,6 @@ exports.getUserByID = (req, res)=>{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// 
 exports.createNewUser = (req, res) => {
          const email = req.body.email;
          const password = req.body.password;   
@@ -48,13 +47,15 @@ exports.createNewUser = (req, res) => {
                    res.status(401).json({ success: false, message: "User Already In Use!" });
                 }else{
                   if(result.length === 0){
-// insert new user into database. //
+// call bcrypt to generate the hash of the password and the number of salting rounds.  //
         bcrypt.hash(req.body.password, 10, (e,hash) => {
+// checking for errors and if errors send back response message. //
          if(e){
            res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
          }else{
+// this line now brings in the stored hash password within the variable hash which now can run the dql query to place the registered user into the database.//
            if(hash){
-      dbconnect.query('INSERT INTO users (user_email, user_password) VALUES (?,?)', [req.body.email, req.body.password],  (e,result) => { 
+      dbconnect.query('INSERT INTO users (user_email, user_password) VALUES (?,?)', [req.body.email, hash],(e,result) => { 
         if(e){
           res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
         }else{
@@ -67,56 +68,43 @@ exports.createNewUser = (req, res) => {
        
           }
        })}
-      
-             
-              
-
-           
-
-
-          
-          
-          
-       
           }
-               
-              
+                          
 ///////////////////////////////////////////////////////////////////////////////////////
-// loginUser bcrypt.//
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////
-//
 exports.loginUser = (req, res) => {
     const { email, password } = req.body;
     // Checks the email and password fields for null. //
        if(email && password === 0){
            res.send(400).json({ success: false, message: "Please Complete All Fields!"});
         } else{
+// performs sql query check for user in database. //
           dbconnect.query('SELECT * FROM users WHERE user_email = ? ', [req.body.email], (err,result) => {
             if(err){
               res.status(500).send("An Error Occurred While Verifying The user");
           }else{
-            // if user does not exit in the database. //
+// if user does not exit in the database. //
             if(result.length === 0){
               res.status(401).json({ success: false, message: "The User Does Not Exist! " });
             }else{
-              if(password === result[0].user_password){
-                const user = {id: result[0].user_id, email: result[0].user_email}
-                res.send({ 
-                  _id: result[0].user_id,
-                  email: result[0].user_email,
-                  token: util.generateToken(user)
-                })
-              }
-              else{
+// if user exist call bcrypt to compare password with the user_pssword stored in database. //
+           bcrypt.compare(req.body.password, result[0].user_password, (e, result) => {
+             if(e){
+              res.status(500).send("An Error Occurred While Verifying The user");
+             }else{
+// if comparison is made generate a result.//
+                if(result){
+               return res.status(200).send({ success:true, authToken: util.generateToken({user:req.body.email}),
+              })  
+              } else{
                   // incorrect password. //
                   return res.status(401).send("The Password Is Incorrect");
                 }
+
+             }
+
+           })
+              
+             
               }
            }
        })
