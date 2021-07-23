@@ -49,16 +49,35 @@ exports.createNewUser = (req, res) => {
                 }else{
                   if(result.length === 0){
 // insert new user into database. //
-       dbconnect.query('INSERT INTO users (user_email, user_password) VALUES (?,?)', [req.body.email, req.body.password],  (e,result) => { 
-            if(e){
-              res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
-            } else{
-              if(result){
+        bcrypt.hash(req.body.password, 10, (e,hash) => {
+         if(e){
+           res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
+         }else{
+           if(hash){
+      dbconnect.query('INSERT INTO users (user_email, user_password) VALUES (?,?)', [req.body.email, req.body.password],  (e,result) => { 
+        if(e){
+          res.status(500).json({ success: false, message: "And Error Occured Creating User!"});
+        }else{
+          if(result){
             return res.status(201).json({ success: true, message: "User created Successfully!"});
               }
-            }
-          } 
-       )}}}})}
+        }
+       }
+          )}}})}}
+       
+          }
+       })}
+      
+             
+              
+
+           
+
+
+          
+          
+          
+       
           }
                
               
